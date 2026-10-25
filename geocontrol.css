@@ -1,0 +1,1063 @@
+< !DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>GEOTRADE - Global Tension Monitor</title><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet"><style>* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'JetBrains Mono', monospace;
+    background: #0a0e1a;
+    color: #e0e6ed;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Starfield Background */
+.starfield {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 50%;
+    opacity: 0.3;
+    animation: twinkle 3s infinite ease-in-out;
+}
+
+@keyframes twinkle {
+
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}
+
+/* Header */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    background: rgba(10, 14, 26, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.pulse-icon {
+    width: 30px;
+    height: 30px;
+    position: relative;
+}
+
+.pulse-icon::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, #00ff88, #00cc6a);
+    clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.6;
+        transform: scale(0.9);
+    }
+}
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.logo-title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #fff;
+}
+
+.logo-subtitle {
+    font-size: 9px;
+    color: #666;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.gti-display {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.gti-label {
+    font-size: 11px;
+    color: #666;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.gti-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #ff9500;
+}
+
+.gti-change {
+    font-size: 12px;
+    color: #ff3b30;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.gti-badge {
+    background: rgba(255, 149, 0, 0.2);
+    color: #ff9500;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.nav-tabs {
+    display: flex;
+    gap: 30px;
+}
+
+.nav-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: color 0.3s;
+    padding: 8px 12px;
+    border-radius: 6px;
+}
+
+.nav-tab:hover {
+    color: #00ff88;
+    background: rgba(0, 255, 136, 0.1);
+}
+
+.nav-tab.active {
+    color: #00ff88;
+    background: rgba(0, 255, 136, 0.15);
+}
+
+.nav-icon {
+    width: 16px;
+    height: 16px;
+    opacity: 0.6;
+}
+
+.status-bar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    background: #00ff88;
+    border-radius: 50%;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+}
+
+.time-display {
+    font-size: 11px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Main Container */
+.container {
+    display: flex;
+    height: 100vh;
+    padding-top: 70px;
+}
+
+/* Left Sidebar */
+.sidebar-left {
+    width: 280px;
+    background: rgba(15, 20, 35, 0.6);
+    backdrop-filter: blur(10px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.filters-section {
+    margin-bottom: 30px;
+}
+
+.section-title {
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-btn {
+    width: 100%;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #e0e6ed;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: left;
+}
+
+.filter-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #00ff88;
+}
+
+.risk-legend {
+    margin-top: 30px;
+}
+
+.risk-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.risk-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.risk-color {
+    width: 20px;
+    height: 10px;
+    border-radius: 2px;
+}
+
+.risk-threshold {
+    font-size: 10px;
+    color: #666;
+}
+
+.gti-trend {
+    margin-top: 30px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+}
+
+.trend-title {
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+}
+
+.trend-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 60px;
+}
+
+.trend-bar {
+    flex: 1;
+    background: rgba(100, 100, 120, 0.3);
+    border-radius: 2px;
+    position: relative;
+    transition: all 0.3s;
+}
+
+.trend-bar:hover {
+    background: rgba(0, 255, 136, 0.3);
+}
+
+/* Globe Container */
+.globe-container {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#globeCanvas {
+    width: 100%;
+    height: 100%;
+}
+
+.globe-status {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(10, 14, 26, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 12px 24px;
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #00ff88;
+}
+
+.globe-hint {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.8;
+}
+
+/* Right Sidebar - Signals */
+.sidebar-right {
+    width: 400px;
+    background: rgba(15, 20, 35, 0.6);
+    backdrop-filter: blur(10px);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    overflow-y: auto;
+}
+
+.signals-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.signals-title {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.close-btn {
+    width: 24px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.signal-card {
+    padding: 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s;
+}
+
+.signal-card:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.signal-main {
+    margin-bottom: 20px;
+}
+
+.signal-pair {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.signal-action {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.signal-action.buy {
+    background: rgba(0, 255, 136, 0.2);
+    color: #00ff88;
+}
+
+.signal-action.sell {
+    background: rgba(255, 59, 48, 0.2);
+    color: #ff3b30;
+}
+
+.signal-category {
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 12px;
+}
+
+.signal-price {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.signal-change {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.signal-change.positive {
+    color: #00ff88;
+}
+
+.signal-change.negative {
+    color: #ff3b30;
+}
+
+.confidence-bar {
+    margin: 15px 0;
+}
+
+.confidence-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #666;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.confidence-track {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+
+.confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00ff88, #00cc6a);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+.ai-analysis {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+}
+
+.analysis-title {
+    font-size: 10px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.analysis-text {
+    font-size: 12px;
+    line-height: 1.6;
+    color: #b0b8c1;
+}
+
+.risk-factors {
+    margin-top: 15px;
+}
+
+.risk-factor-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #b0b8c1;
+    margin-bottom: 8px;
+}
+
+.risk-icon {
+    color: #ff9500;
+}
+
+.all-signals {
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.all-signals-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.signals-count {
+    font-size: 11px;
+    color: #666;
+}
+
+.expand-icon {
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.expand-icon:hover {
+    color: #00ff88;
+}
+
+.mini-signal {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.mini-signal:hover {
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateX(5px);
+}
+
+.mini-signal-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mini-signal-pair {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.mini-signal-category {
+    font-size: 10px;
+    color: #666;
+}
+
+.mini-signal-right {
+    text-align: right;
+}
+
+.mini-signal-price {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.mini-signal-change {
+    font-size: 11px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 2px;
+    background: rgba(0, 255, 136, 0.2);
+    margin-top: 8px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #00ff88;
+}
+
+.alert-feed {
+    position: fixed;
+    bottom: 20px;
+    left: 300px;
+    max-width: 400px;
+    z-index: 2000;
+}
+
+.alert-item {
+    background: rgba(10, 14, 26, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 3px solid #ff3b30;
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.alert-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.alert-title {
+    font-size: 11px;
+    color: #ff3b30;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.alert-time {
+    font-size: 10px;
+    color: #666;
+}
+
+.alert-message {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #b0b8c1;
+}
+
+.alert-meta {
+    margin-top: 8px;
+    font-size: 10px;
+    color: #666;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Waitlist Button */
+.waitlist-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s;
+    z-index: 2000;
+}
+
+.waitlist-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+}
+
+</style></head><body>< !-- Starfield Background --><div class="starfield" id="starfield"></div>< !-- Header --><header class="header"><div class="logo-section"><div class="pulse-icon"></div><div class="logo-text"><div class="logo-title">GEOTRADE</div><div class="logo-subtitle">TRADER V2.3</div></div></div><div class="gti-display"><div class="gti-label">GLOBAL TENSION INDEX (GTI)</div><div class="gti-value">71.4</div><div class="gti-change"><span>▲12.1</span></div><div class="gti-badge">ELEVATED</div></div><nav class="nav-tabs"><div class="nav-tab active"><span>🌍</span><span>EARTH PULSE</span></div><div class="nav-tab"><span>🗺️</span><span>GEO MAP</span></div><div class="nav-tab"><span>📊</span><span>AI SIGNALS</span></div><div class="nav-tab"><span>💼</span><span>PORTFOLIO</span></div></nav><div class="status-bar"><div class="live-indicator"><div class="live-dot"></div><span>LIVE</span><span style="color: #666;">• 2 feeds</span></div><div class="time-display"><span>🕐</span><span id="current-time">13:59:17 UTC</span></div></div></header>< !-- Main Container --><div class="container">< !-- Left Sidebar --><aside class="sidebar-left"><div class="filters-section"><div class="section-title"><span>▶</span><span>FILTERS</span></div><button class="filter-btn">All Regions</button></div><div class="risk-legend"><div class="section-title">RISK LEVEL</div><div class="risk-item"><div class="risk-label"><div class="risk-color" style="background: #ff3b30;"></div><span>CRITICAL</span></div><div class="risk-threshold">&gt;
+80</div></div><div class="risk-item"><div class="risk-label"><div class="risk-color" style="background: #ff9500;"></div><span>HIGH</span></div><div class="risk-threshold">60+</div></div><div class="risk-item"><div class="risk-label"><div class="risk-color" style="background: #4a90e2;"></div><span>MEDIUM</span></div><div class="risk-threshold">35+</div></div><div class="risk-item"><div class="risk-label"><div class="risk-color" style="background: #00cc6a;"></div><span>LOW</span></div><div class="risk-threshold">&lt;
+35</div></div></div><div class="gti-trend"><div class="trend-title">GTI TREND</div><div class="trend-bars"><div class="trend-bar" style="height: 30%;"></div><div class="trend-bar" style="height: 45%;"></div><div class="trend-bar" style="height: 60%;"></div><div class="trend-bar" style="height: 50%;"></div><div class="trend-bar" style="height: 70%;"></div><div class="trend-bar" style="height: 85%;"></div><div class="trend-bar" style="height: 90%;"></div><div class="trend-bar" style="height: 100%;"></div></div></div></aside>< !-- Globe Container --><main class="globe-container"><div class="globe-status"><div class="status-item"><div class="status-dot"></div><span>● LIVE</span></div><div class="status-item"><span>📡 Global GTI</span><strong>55.0</strong></div></div><canvas id="globeCanvas"></canvas><div class="globe-hint"><span>📍</span><span>Click any country to view market impact</span><span>→</span></div></main>< !-- Right Sidebar - Signals --><aside class="sidebar-right"><div class="signals-header"><div class="signals-title">⚡ SIGNALS</div><div class="close-btn">✕</div></div>< !-- Featured Signal --><div class="signal-card"><div class="signal-main"><div class="signal-pair">XAU/USD <span class="signal-action buy">BUY</span></div><div class="signal-category">Commodities / Global</div><div class="signal-price">$2314.50</div><div class="signal-change positive">+1.2%</div></div><div class="confidence-bar"><div class="confidence-label"><span>Confidence: 85%</span><span>Uncertainty: 10%</span></div><div class="confidence-track"><div class="confidence-fill" style="width: 85%;"></div></div></div><div class="ai-analysis"><div class="analysis-title"><span>🤖</span><span>AI ANALYSIS</span></div><div class="analysis-text">Safe haven flows increasing due to elevated geopolitical stress. </div></div><div class="risk-factors"><div class="analysis-title"><span>⚠️</span><span>RISK FACTORS</span></div><div class="risk-factor-item"><span class="risk-icon">»</span><span>Sudden de-escalation</span></div><div class="risk-factor-item"><span class="risk-icon">»</span><span>Strong USD data</span></div></div></div>< !-- All Signals --><div class="all-signals"><div class="all-signals-header"><div class="section-title"><span>📊</span><span>ALL SIGNALS</span><span class="signals-count">(2)</span></div><div class="expand-icon">▼</div></div><div class="mini-signal"><div class="mini-signal-left"><span class="signal-action buy">BUY</span><div><div class="mini-signal-pair">XAU/USD</div><div class="mini-signal-category">Commodities</div></div></div><div class="mini-signal-right"><div class="mini-signal-price">$2314.50</div><div class="mini-signal-change positive">+1.2%</div></div></div><div class="mini-signal"><div class="mini-signal-left"><span class="signal-action sell">SELL</span><div><div class="mini-signal-pair">SPX</div><div class="mini-signal-category">Equities</div></div></div><div class="mini-signal-right"><div class="mini-signal-price">$5120.30</div><div class="mini-signal-change negative">-1.5%</div></div></div></div></aside></div>< !-- Alert Feed --><div class="alert-feed"><div class="alert-item"><div class="alert-header"><div class="alert-title">⚠️ ECB EMERGENCY STATEMENT</div><div class="alert-time">05:22 PM</div></div><div class="alert-message">ECB Emergency Statement </div><div class="alert-meta">Europe • High • CRITICAL</div></div></div>< !-- Waitlist Button --><button class="waitlist-btn">⏰ JOIN WAITLIST</button><script> // Create starfield
+const starfield=document.getElementById('starfield');
+
+for (let i=0; i < 100; i++) {
+    const star=document.createElement('div');
+    star.className='star';
+    star.style.left=Math.random() * 100+'%';
+    star.style.top=Math.random() * 100+'%';
+    star.style.animationDelay=Math.random() * 3+'s';
+    starfield.appendChild(star);
+}
+
+// Update time
+function updateTime() {
+    const now=new Date();
+    const hours=String(now.getUTCHours()).padStart(2, '0');
+    const minutes=String(now.getUTCMinutes()).padStart(2, '0');
+    const seconds=String(now.getUTCSeconds()).padStart(2, '0');
+
+    document.getElementById('current-time').textContent=`$ {
+        hours
+    }
+
+    :$ {
+        minutes
+    }
+
+    :$ {
+        seconds
+    }
+
+    UTC`;
+}
+
+setInterval(updateTime, 1000);
+updateTime();
+
+// Simple 3D Globe with Canvas
+const canvas=document.getElementById('globeCanvas');
+const ctx=canvas.getContext('2d');
+
+function resizeCanvas() {
+    canvas.width=canvas.offsetWidth;
+    canvas.height=canvas.offsetHeight;
+}
+
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// Globe properties
+let rotation=0;
+const centerX=canvas.width / 2;
+const centerY=canvas.height / 2;
+const radius=Math.min(canvas.width, canvas.height) * 0.35;
+
+// Region data (simplified continents with colors)
+const regions=[ {
+    name: 'North America', lat: 45, lon: -100, color: '#00cc6a', risk: 35
+}
+
+,
+{
+name: 'South America', lat: -15, lon: -60, color: '#4a90e2', risk: 45
+}
+
+,
+{
+name: 'Europe', lat: 50, lon: 10, color: '#00cc6a', risk: 40
+}
+
+,
+{
+name: 'Africa', lat: 0, lon: 20, color: '#ff9500', risk: 65
+}
+
+,
+{
+name: 'Middle East', lat: 30, lon: 50, color: '#ff9500', risk: 70
+}
+
+,
+{
+name: 'Asia', lat: 35, lon: 100, color: '#ff3b30', risk: 75
+}
+
+,
+{
+name: 'Russia', lat: 60, lon: 90, color: '#ff3b30', risk: 80
+}
+
+,
+{
+name: 'Australia', lat: -25, lon: 135, color: '#4a90e2', risk: 30
+}
+
+,
+];
+
+function toRadians(deg) {
+    return deg * Math.PI / 180;
+}
+
+function project3D(lat, lon, rotation) {
+    const latRad=toRadians(lat);
+    const lonRad=toRadians(lon + rotation);
+
+    const x=Math.cos(latRad) * Math.sin(lonRad);
+    const y=Math.sin(latRad);
+    const z=Math.cos(latRad) * Math.cos(lonRad);
+
+    // Simple orthographic projection
+    const scale=radius;
+    const projX=centerX+x * scale;
+    const projY=centerY - y * scale;
+
+    return {
+        x: projX, y: projY, z: z, visible: z > 0
+    }
+
+    ;
+}
+
+function drawGlobe() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw globe sphere
+    const gradient=ctx.createRadialGradient(centerX, centerY, radius * 0.3,
+        centerX, centerY, radius);
+    gradient.addColorStop(0, 'rgba(30, 40, 80, 0.4)');
+    gradient.addColorStop(1, 'rgba(10, 20, 50, 0.8)');
+
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fillStyle=gradient;
+    ctx.fill();
+
+    // Draw subtle grid lines
+    ctx.strokeStyle='rgba(100, 150, 200, 0.1)';
+    ctx.lineWidth=1;
+
+    // Latitude lines
+    for (let lat=-60; lat <=60; lat +=30) {
+        ctx.beginPath();
+
+        for (let lon=-180; lon <=180; lon +=5) {
+            const pos=project3D(lat, lon, rotation);
+
+            if (pos.visible) {
+                if (lon===-180) {
+                    ctx.moveTo(pos.x, pos.y);
+                }
+
+                else {
+                    ctx.lineTo(pos.x, pos.y);
+                }
+            }
+        }
+
+        ctx.stroke();
+    }
+
+    // Longitude lines
+    for (let lon=-180; lon < 180; lon +=30) {
+        ctx.beginPath();
+
+        for (let lat=-90; lat <=90; lat +=5) {
+            const pos=project3D(lat, lon, rotation);
+
+            if (pos.visible) {
+                if (lat===-90) {
+                    ctx.moveTo(pos.x, pos.y);
+                }
+
+                else {
+                    ctx.lineTo(pos.x, pos.y);
+                }
+            }
+        }
+
+        ctx.stroke();
+    }
+
+    // Draw regions
+    regions.sort((a, b)=> {
+            const posA=project3D(a.lat, a.lon, rotation);
+            const posB=project3D(b.lat, b.lon, rotation);
+            return posA.z - posB.z;
+        });
+
+    regions.forEach(region=> {
+            const pos=project3D(region.lat, region.lon, rotation);
+
+            if (pos.visible) {
+                // Draw region circle
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 30, 0, Math.PI * 2);
+                ctx.fillStyle=region.color + '80';
+                ctx.fill();
+
+                // Glow effect
+                ctx.shadowBlur=20;
+                ctx.shadowColor=region.color;
+                ctx.strokeStyle=region.color;
+                ctx.lineWidth=2;
+                ctx.stroke();
+                ctx.shadowBlur=0;
+
+                // Label
+                ctx.fillStyle='#fff';
+                ctx.font='10px JetBrains Mono';
+                ctx.textAlign='center';
+                ctx.fillText(region.name, pos.x, pos.y - 40);
+            }
+        });
+
+    // Outer glow
+    ctx.strokeStyle='rgba(100, 200, 255, 0.3)';
+    ctx.lineWidth=3;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius + 2, 0, Math.PI * 2);
+    ctx.stroke();
+}
+
+function animate() {
+    rotation+=0.2;
+    if (rotation >=360) rotation=0;
+    drawGlobe();
+    requestAnimationFrame(animate);
+}
+
+animate();
+
+// Mouse interaction
+let isDragging=false;
+let lastX=0;
+
+canvas.addEventListener('mousedown', (e)=> {
+        isDragging=true;
+        lastX=e.clientX;
+    });
+
+canvas.addEventListener('mousemove', (e)=> {
+        if (isDragging) {
+            const deltaX=e.clientX - lastX;
+            rotation -=deltaX * 0.5;
+            lastX=e.clientX;
+        }
+    });
+
+canvas.addEventListener('mouseup', ()=> {
+        isDragging=false;
+    });
+
+canvas.addEventListener('mouseleave', ()=> {
+        isDragging=false;
+    });
+
+// Click to show region info
+canvas.addEventListener('click', (e)=> {
+        const rect=canvas.getBoundingClientRect();
+        const x=e.clientX - rect.left;
+        const y=e.clientY - rect.top;
+
+        regions.forEach(region=> {
+                const pos=project3D(region.lat, region.lon, rotation);
+                const distance=Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2));
+
+                if (distance < 30 && pos.visible) {
+                    alert(`$ {
+                            region.name
+                        }
+
+                        \nRisk Level: $ {
+                            region.risk
+                        }
+
+                        \nStatus: $ {
+                            region.risk > 70 ? 'HIGH' : region.risk > 50 ? 'MEDIUM' : 'LOW'
+                        }
+
+                        `);
+                }
+            });
+    });
+</script></body></html>
