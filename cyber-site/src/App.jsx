@@ -1,0 +1,267 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { 
+  Shield, Terminal, Cpu, Lock, Eye, Activity, Globe, ArrowRight, Code, Zap, Menu, X, AlertTriangle, CheckCircle, FileText, Sparkles
+} from 'lucide-react';
+
+/* --- GEMINI CONFIGURATION --- */
+// PASTE YOUR API KEY INSIDE THE QUOTES BELOW
+const GEMINI_API_KEY = "AIzaSyD0heDSdVVEtT8B6zJvcFAlPd66mz2dkYI"; 
+const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025";
+
+/* --- API LOGIC --- */
+async function callGemini(prompt, systemInstruction = "") {
+  // If no key is provided, return a fake demo response so the app doesn't crash
+  if (!GEMINI_API_KEY || GEMINI_API_KEY === "AIzaSyD0heDSdVVEtT8B6zJvcFAlPd66mz2dkYI") {
+    return "DEMO_MODE :: API_KEY_MISSING\n\nPlease add your Google Gemini API key in the source code (App.jsx) to enable live analysis.\n\nSimulated Output:\n**THREAT_LEVEL**: LOW\n**ANALYSIS**: No active threats detected in local simulation.";
+  }
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  
+  const payload = {
+    contents: [{ parts: [{ text: prompt }] }],
+    systemInstruction: { parts: [{ text: systemInstruction }] },
+    generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "NO_DATA_RECEIVED";
+  } catch (error) {
+    console.error("Gemini API failed:", error);
+    return "ERROR: CONNECTION_LOST // RECURSIVE_FAILURE";
+  }
+}
+
+/* --- VISUAL UTILS --- */
+const DitherPattern = ({ opacity = 0.1, color = "currentColor" }) => (
+  <div className="absolute inset-0 pointer-events-none z-0" style={{ opacity: opacity, backgroundImage: `url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0H2V2H0V0Z' fill='${encodeURIComponent(color)}'/%3E%3Cpath d='M2 2H4V4H2V2Z' fill='${encodeURIComponent(color)}'/%3E%3C/svg%3E")`, backgroundSize: '4px 4px' }} />
+);
+
+const DecryptText = ({ text, reveal = true, speed = 30 }) => {
+  const [display, setDisplay] = useState(text);
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;':,./<>?";
+  useEffect(() => {
+    if (!reveal) return;
+    let iteration = 0;
+    const interval = setInterval(() => {
+      setDisplay(text.split("").map((letter, index) => {
+            if (index < iteration) return text[index];
+            return characters[Math.floor(Math.random() * characters.length)];
+          }).join(""));
+      if (iteration >= text.length) clearInterval(interval);
+      iteration += 1 / 3;
+    }, speed);
+    return () => clearInterval(interval);
+  }, [text, reveal, speed]);
+  return <span>{display}</span>;
+};
+
+const NeuralCodeBlock = () => {
+  const [lines, setLines] = useState([]);
+  useEffect(() => {
+    const generateLine = () => {
+      const hex = Math.random().toString(16).substring(2, 10).toUpperCase();
+      const binary = Math.random() > 0.5 ? "10110" : "01001";
+      return `> PROCESS_ID: [${hex}] :: ANALYZING_PACKET <${binary}>`;
+    };
+    const interval = setInterval(() => {
+      setLines(prev => {
+        const newLines = [...prev, generateLine()];
+        if (newLines.length > 12) newLines.shift();
+        return newLines;
+      });
+    }, 150);
+    return () => clearInterval(interval);
+  }, []);
+  return (
+    <div className="relative w-full h-full bg-neutral-950 border border-neutral-800 p-4 overflow-hidden flex flex-col font-mono text-[10px] leading-relaxed text-neutral-400 select-none">
+      <DitherPattern opacity={0.05} color="white" />
+      <div className="absolute top-0 right-0 p-2 bg-white text-black text-[9px] font-bold uppercase tracking-wider">Live_Feed</div>
+      {lines.map((line, i) => <div key={i} className="opacity-80 border-l-2 border-transparent hover:border-white hover:text-white pl-2 transition-colors duration-75 cursor-crosshair">{line}</div>)}
+      <div className="animate-pulse mt-2 text-white">_</div>
+    </div>
+  );
+};
+
+const SharpButton = ({ children, primary = false, className = "", onClick }) => (
+  <button onClick={onClick} className={`relative group overflow-hidden px-6 py-3 text-xs font-bold uppercase tracking-widest transition-all duration-200 border border-neutral-800 rounded-none flex items-center justify-center gap-2 ${primary ? 'bg-white text-black hover:bg-neutral-200' : 'bg-transparent text-neutral-400 hover:text-white hover:border-white'} ${className}`}>
+    <span className="relative z-10 flex items-center gap-2">{children}</span>
+    {!primary && <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-200 bg-white"><DitherPattern opacity={1} color="black" /></div>}
+  </button>
+);
+
+const NeuralTerminal = ({ isOpen, onClose, initialQuery = "" }) => {
+  const [input, setInput] = useState("");
+  const [history, setHistory] = useState([
+    { type: 'system', content: 'SENTINEL_AI v2.0.4 INITIALIZED...' },
+    { type: 'system', content: 'SECURE_CONNECTION_ESTABLISHED' },
+    { type: 'system', content: 'AWAITING_INPUT_VECTOR...' },
+  ]);
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollRef = useRef(null);
+  const processedQueryRef = useRef("");
+
+  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [history]);
+
+  const handleAnalyze = useCallback(async (queryText = input) => {
+    if (!queryText.trim() || isLoading) return;
+    const userMsg = { type: 'user', content: queryText };
+    setHistory(prev => [...prev, userMsg]);
+    setInput("");
+    setIsLoading(true);
+    const systemPrompt = `You are SENTINEL_AI, an advanced cybersecurity defense system. Analyze the user's input (code, logs, or threat description). Output format must be strictly structured in Markdown. Always include: 1. **THREAT_LEVEL**: [LOW / MEDIUM / HIGH / CRITICAL] 2. **VECTOR_ANALYSIS**: Brief technical explanation. 3. **COUNTERMEASURE**: Recommended action. Keep the tone robotic, precise, and minimal. Use uppercase for emphasis.`;
+    const result = await callGemini(queryText, systemPrompt);
+    setIsLoading(false);
+    setHistory(prev => [...prev, { type: 'ai', content: result }]);
+  }, [input, isLoading]);
+
+  useEffect(() => {
+    if (initialQuery && isOpen && processedQueryRef.current !== initialQuery) {
+      processedQueryRef.current = initialQuery;
+      handleAnalyze(initialQuery);
+    }
+  }, [initialQuery, isOpen, handleAnalyze]);
+
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-12 bg-black/60 backdrop-blur-md">
+      <div className="w-full max-w-4xl h-[80vh] bg-neutral-950 border border-neutral-700 flex flex-col relative shadow-2xl">
+        <DitherPattern opacity={0.05} color="white" />
+        <div className="flex items-center justify-between p-3 border-b border-neutral-800 bg-neutral-900">
+          <div className="flex items-center gap-2"><Terminal size={14} className="text-green-500" /><span className="text-xs font-mono text-white tracking-widest">NEURAL_INTERFACE_TERMINAL</span></div>
+          <button onClick={onClose} className="text-neutral-500 hover:text-white"><X size={16} /></button>
+        </div>
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 font-mono text-xs md:text-sm space-y-4 scrollbar-hide">
+          {history.map((msg, idx) => (
+            <div key={idx} className={`flex gap-4 ${msg.type === 'user' ? 'text-neutral-300' : msg.type === 'ai' ? 'text-green-400' : 'text-neutral-500'}`}>
+              <span className="shrink-0 opacity-50">{msg.type === 'user' ? '>' : msg.type === 'ai' ? '::' : '#'}</span>
+              <div className="whitespace-pre-wrap leading-relaxed">{msg.type === 'ai' ? <DecryptText text={msg.content} speed={5} /> : msg.content}</div>
+            </div>
+          ))}
+          {isLoading && <div className="flex gap-4 text-green-500"><span className="shrink-0 opacity-50">::</span><span className="animate-pulse">ANALYZING_PAYLOAD...</span></div>}
+        </div>
+        <div className="p-4 border-t border-neutral-800 bg-neutral-900/50 relative">
+          <div className="flex items-center gap-2">
+            <span className="text-green-500 animate-pulse">{'>'}</span>
+            <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()} placeholder="ENTER_LOGS_OR_QUERY_FOR_ANALYSIS..." className="w-full bg-transparent border-none outline-none text-white font-mono text-sm placeholder:text-neutral-700" autoFocus />
+            <button onClick={() => handleAnalyze()} className="text-[10px] font-bold uppercase bg-white text-black px-3 py-1 hover:bg-neutral-200 transition-colors flex items-center gap-1"><Sparkles size={10} /> Analyze</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* --- MAIN SECTIONS --- */
+const Navbar = ({ onOpenTerminal }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-neutral-950/90 backdrop-blur-sm border-b border-neutral-900">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 h-14 flex items-center justify-between">
+        <div className="flex items-center gap-2"><div className="w-3 h-3 bg-white"></div><span className="text-sm font-mono font-bold tracking-tighter text-white">SENTINEL<span className="text-neutral-500">_AI</span></span></div>
+        <div className="hidden md:flex gap-8 text-[10px] uppercase tracking-widest text-neutral-400 font-mono">{['Solutions', 'Protocol', 'Research', 'Company'].map((item) => <a key={item} href="#" className="hover:text-white transition-colors decoration-1 underline-offset-4 hover:underline">{item}</a>)}</div>
+        <div className="flex items-center gap-4">
+          <button onClick={() => onOpenTerminal()} className="hidden md:flex items-center gap-2 text-[10px] font-mono text-white border border-white/20 px-3 py-1 hover:bg-white hover:text-black transition-colors group"><Terminal size={12} />ACCESS_TERMINAL</button>
+          <button className="md:hidden text-white" onClick={() => setIsOpen(!isOpen)}>{isOpen ? <X size={18} /> : <Menu size={18} />}</button>
+        </div>
+      </div>
+      {isOpen && <div className="md:hidden absolute top-14 left-0 w-full bg-neutral-950 border-b border-neutral-800 p-4 flex flex-col gap-4">{['Solutions', 'Protocol', 'Research', 'Company'].map((item) => <a key={item} href="#" className="text-xs font-mono text-neutral-400 uppercase">{item}</a>)}<button onClick={() => onOpenTerminal()} className="text-xs font-mono text-white uppercase text-left pt-2 border-t border-neutral-800">&gt; ACCESS_TERMINAL</button></div>}
+    </nav>
+  );
+};
+
+const Hero = ({ onInitiateScan }) => {
+  return (
+    <section className="pt-32 pb-20 px-4 md:px-8 max-w-7xl mx-auto min-h-screen flex flex-col justify-center relative border-l border-r border-neutral-900/50">
+      <DitherPattern opacity={0.03} color="#ffffff" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
+        <div className="lg:col-span-7 flex flex-col gap-6 z-10">
+          <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-500 uppercase tracking-widest"><span className="w-2 h-2 bg-green-500 animate-pulse"></span>System Operational<span className="mx-2 text-neutral-800">|</span>V.2.0.4</div>
+          <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tighter leading-[0.9]">PREDICTIVE <br /><span className="text-neutral-600">THREAT</span> <br />NEUTRALIZATION</h1>
+          <p className="text-neutral-400 font-mono text-xs md:text-sm max-w-md leading-relaxed border-l border-neutral-800 pl-4 py-2"><DecryptText text="Autonomous cybersecurity infrastructure for the post-human era. We utilize recursive neural networks to identify zero-day exploits before execution." /></p>
+          <div className="flex flex-wrap gap-4 mt-4"><SharpButton primary onClick={onInitiateScan}><Sparkles size={14} className="mr-1" /> Initiate AI Scan</SharpButton><SharpButton>View Documentation</SharpButton></div>
+        </div>
+        <div className="lg:col-span-5 h-64 lg:h-96 w-full relative">
+          <div className="absolute -top-4 -left-4 text-[10px] font-mono text-neutral-600">// RUNNING_DAEMON</div>
+          <div className="w-full h-full border border-neutral-800 relative bg-neutral-900/20 backdrop-blur-sm group"><NeuralCodeBlock /><div className="absolute -top-[1px] -left-[1px] w-2 h-2 bg-white z-20"></div><div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 bg-white z-20"></div><div className="absolute -top-[1px] -right-[1px] w-2 h-2 border-t border-r border-white z-20"></div><div className="absolute -bottom-[1px] -left-[1px] w-2 h-2 border-b border-l border-white z-20"></div></div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const BentoGrid = () => (
+  <section className="py-20 border-t border-neutral-900 bg-neutral-950 relative">
+    <div className="max-w-7xl mx-auto px-4 md:px-8">
+      <div className="mb-12 flex items-end justify-between border-b border-neutral-900 pb-4"><h2 className="text-2xl font-bold text-white tracking-tight">CORE_MODULES</h2><span className="text-[10px] font-mono text-neutral-500">INDEX: 001-004</span></div>
+      <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-4 h-auto md:h-[600px]">
+        <div className="md:col-span-2 row-span-2 relative border border-neutral-800 bg-neutral-900/10 p-8 flex flex-col justify-between group hover:border-neutral-600 transition-colors overflow-hidden">
+          <div className="absolute inset-0 bg-neutral-950 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"><DitherPattern opacity={0.08} color="white" /></div>
+          <div className="relative z-10"><div className="w-12 h-12 border border-neutral-800 flex items-center justify-center mb-6 bg-neutral-950"><Shield className="text-white w-6 h-6" strokeWidth={1.5} /></div><h3 className="text-2xl text-white font-bold mb-2">HEURISTIC ENGINE</h3><p className="text-neutral-400 font-mono text-xs max-w-sm leading-relaxed">Our proprietary model analyzes 40TB of traffic patterns per second, identifying anomalies that statistically deviate from established baselines.</p></div>
+          <div className="relative z-10 mt-8 w-full h-32 border-t border-l border-neutral-800 p-2 flex items-end gap-1">{[40, 65, 30, 80, 55, 90, 45, 60, 75, 50, 95, 60].map((h, i) => <div key={i} className="flex-1 bg-neutral-800 hover:bg-white transition-colors duration-300" style={{ height: `${h}%`}}></div>)}</div>
+        </div>
+        <div className="border border-neutral-800 bg-neutral-900/10 p-6 flex flex-col justify-center group hover:bg-neutral-900 transition-colors relative overflow-hidden">
+          <div className="absolute top-2 right-2"><Zap className="w-4 h-4 text-neutral-600 group-hover:text-white" /></div><h4 className="text-white font-bold text-lg mb-2">ZERO LATENCY</h4><p className="text-neutral-500 font-mono text-[10px] uppercase">Processing &lt; 2ms <br/>Edge Deployed</p><div className="mt-4 w-full bg-neutral-900 h-1 overflow-hidden"><div className="h-full bg-white w-1/3 animate-[shimmer_2s_infinite_linear]"></div></div>
+        </div>
+        <div className="border border-neutral-800 bg-neutral-900/10 p-6 flex flex-col justify-between group hover:border-white transition-colors relative">
+          <div className="flex justify-between items-start"><Lock className="w-5 h-5 text-white" strokeWidth={1.5} /><span className="text-[9px] font-mono text-neutral-500 border border-neutral-800 px-1">AES-256</span></div>
+          <div className="space-y-2 mt-4"><div className="text-[10px] font-mono text-neutral-600 break-all group-hover:text-white transition-colors">0x7F4A92...B8E1</div><div className="text-[10px] font-mono text-neutral-600 break-all group-hover:text-white transition-colors delay-75">0x9C2D41...F3A0</div></div>
+        </div>
+        <div className="md:col-span-2 md:col-start-2 border border-neutral-800 bg-neutral-900/10 p-4 flex items-center gap-6 group hover:bg-white hover:text-black transition-colors duration-300">
+           <div className="p-3 border border-neutral-800 group-hover:border-black"><Globe className="w-5 h-5" strokeWidth={1.5} /></div><div><h4 className="font-bold text-sm mb-1">GLOBAL NODE NETWORK</h4><p className="text-[10px] font-mono opacity-60 uppercase">San Francisco • Tokyo • Berlin • London</p></div><div className="ml-auto pr-4 opacity-0 group-hover:opacity-100 transition-opacity"><ArrowRight className="w-5 h-5" /></div>
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
+const StatsTicker = () => (
+  <div className="border-y border-neutral-800 bg-black overflow-hidden py-3">
+    <div className="flex whitespace-nowrap animate-[marquee_20s_linear_infinite] hover:[animation-play-state:paused]">
+      {[...Array(10)].map((_, i) => (
+        <div key={i} className="flex items-center gap-8 mx-4"><span className="text-xs font-mono text-neutral-500 uppercase">Threats_Blocked: <span className="text-white">8,924,10{i}</span></span><span className="text-neutral-800">///</span><span className="text-xs font-mono text-neutral-500 uppercase">Uptime: <span className="text-white">99.999%</span></span><span className="text-neutral-800">///</span><span className="text-xs font-mono text-neutral-500 uppercase">Active_Nodes: <span className="text-white">412</span></span><span className="text-neutral-800">///</span></div>
+      ))}
+    </div>
+  </div>
+);
+
+const Footer = () => (
+  <footer className="bg-neutral-950 text-neutral-400 py-12 px-4 md:px-8 border-t border-neutral-900 font-mono text-xs">
+    <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div className="col-span-1 md:col-span-2"><div className="flex items-center gap-2 mb-4"><div className="w-2 h-2 bg-white"></div><span className="text-white font-bold tracking-tighter">SENTINEL_AI</span></div><p className="max-w-xs text-neutral-600 leading-relaxed mb-6">Constructing the digital immune system for enterprise infrastructure.</p><div className="flex gap-4"><input type="email" placeholder="ENTER_EMAIL" className="bg-transparent border-b border-neutral-800 text-white w-48 focus:outline-none focus:border-white py-1 placeholder:text-neutral-700" /><button className="text-white hover:text-neutral-300">→</button></div></div>
+      <div><h4 className="text-white mb-4 uppercase tracking-widest text-[10px]">Directory</h4><ul className="space-y-2"><li><a href="#" className="hover:text-white hover:underline decoration-1 underline-offset-4">Platform</a></li><li><a href="#" className="hover:text-white hover:underline decoration-1 underline-offset-4">Technology</a></li><li><a href="#" className="hover:text-white hover:underline decoration-1 underline-offset-4">Developers</a></li></ul></div>
+      <div><h4 className="text-white mb-4 uppercase tracking-widest text-[10px]">Legal</h4><ul className="space-y-2"><li><a href="#" className="hover:text-white hover:underline decoration-1 underline-offset-4">Privacy_Policy</a></li><li><a href="#" className="hover:text-white hover:underline decoration-1 underline-offset-4">Terms_of_Service</a></li><li><a href="#" className="hover:text-white hover:underline decoration-1 underline-offset-4">SLA</a></li></ul></div>
+    </div>
+    <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-neutral-900 flex justify-between items-center text-[10px] uppercase"><span>© 2024 Sentinel AI Inc.</span><span>System_Status: Nominal</span></div>
+  </footer>
+);
+
+export default function App() {
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+  const [terminalQuery, setTerminalQuery] = useState("");
+  const handleInitiateScan = () => { setTerminalQuery("RUN_FULL_SYSTEM_DIAGNOSTIC --LEVEL=DEEP"); setIsTerminalOpen(true); };
+
+  return (
+    <div className="min-h-screen bg-neutral-950 text-neutral-200 selection:bg-white selection:text-black font-sans">
+      <div className="fixed inset-0 pointer-events-none z-[60] opacity-[0.02] mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")` }}></div>
+      <NeuralTerminal isOpen={isTerminalOpen} onClose={() => setIsTerminalOpen(false)} initialQuery={terminalQuery} />
+      <Navbar onOpenTerminal={() => { setTerminalQuery(""); setIsTerminalOpen(true); }} />
+      <main>
+        <Hero onInitiateScan={handleInitiateScan} />
+        <StatsTicker />
+        <BentoGrid />
+        <section className="py-24 px-4 border-t border-neutral-900 relative overflow-hidden">
+          <div className="max-w-3xl mx-auto text-center relative z-10"><h2 className="text-4xl md:text-6xl font-bold text-white mb-8 tracking-tighter">SECURE YOUR <br/><span className="outline-text text-transparent stroke-white border-text">INFRASTRUCTURE</span></h2><div className="flex justify-center"><SharpButton className="w-full md:w-auto" primary onClick={handleInitiateScan}>Initialize Protocol <ArrowRight size={14} /></SharpButton></div></div>
+          <div className="absolute inset-0 flex justify-center items-center pointer-events-none opacity-10"><Code size={400} strokeWidth={0.5} /></div>
+        </section>
+      </main>
+      <Footer />
+      <style>{`.outline-text { -webkit-text-stroke: 1px white; color: transparent; } .scrollbar-hide::-webkit-scrollbar { display: none; } .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; } @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }`}</style>
+    </div>
+  );
+}
